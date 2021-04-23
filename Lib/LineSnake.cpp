@@ -81,7 +81,7 @@ vector<double> calculate_Eimg(MyImage<double> &I, MyImage<double> &Ibg, vector<i
 
 	vector<double> G(length);
 	for (int i = 0; i < length; i++)
-		G[i] = double(I.getPixel(y[i], x[i]) - I.getPixel(y[i] + 2, x[i]));
+		G[i] = (I.getPixel(y[i]-1, x[i]) - I.getPixel(y[i] +1, x[i]))/2;
 
 	vector<double> C(length);
 	for (int i = 0; i < length; i++)
@@ -164,15 +164,15 @@ vector<int> iterate(MyImage<double> &I, MyImage<double> &Ibg, double alpha, doub
 		y[i] = 35;
 	}
 	int length = x.size();
-	//double init_E = calculate_E(I, Ibg, x, y, alpha, beta, gamma, sigma);
+	double init_E = calculate_E(I, Ibg, x, y, alpha, beta, gamma, sigma);
 	double E_old, E_new;
 	double minE = 0;
 	double tempE;
 	int minEj;
 	int it = 0;
-	E_old = calculate_E(I,Ibg,x,y, alpha, beta, gamma, sigma);
+	E_old = init_E;
 	E_new = E_old+10;
-	//cout << "init_E:" << init_E << endl;
+	cout << "init_E:" << init_E << endl;
 	while (abs(E_new - E_old) > 0.01)
 	{
 		it++;

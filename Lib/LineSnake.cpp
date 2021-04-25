@@ -85,7 +85,7 @@ vector<double> calculate_Eimg(MyImage<double> &I, MyImage<double> &Ibg, vector<i
 
 	vector<double> C(length);
 	for (int i = 0; i < length; i++)
-		C[i] = G[i] / (I.getPixel(y[i], x[i]) + 1e-8);
+		C[i] = G[i] / (Ibg.getPixel(y[i], x[i]) + 1e-8);
 
 	double _minC = *min_element(C.begin(), C.end());
 	double _maxC = *max_element(C.begin(), C.end());

@@ -87,24 +87,20 @@ vector<double> calculate_Eimg(MyImage<double> &I, MyImage<double> &Ibg, vector<i
 	for (int i = 0; i < length; i++)
 		C[i] = G[i] / (Ibg.getPixel(y[i], x[i]) + 1e-8);
 
-	double _minC = *min_element(C.begin(), C.end());
-	double _maxC = *max_element(C.begin(), C.end());
-	for (int i = 0; i < length; i++)
-		Eimg[i] = (_minC - C[i]) / (_maxC - _minC);
-	return Eimg;
+	// double _minC = *min_element(C.begin(), C.end());
+	// double _maxC = *max_element(C.begin(), C.end());
+	// for (int i = 0; i < length; i++)
+	// 	Eimg[i] = (_minC - C[i]) / (_maxC - _minC);
+	return C;
 }
 
 vector<double> calculate_dist(vector<int> &y)
 {
 	int length = y.size();
 	vector<double> dist(length);
-	for (int i = 0; i < length; i++)
-	{
-		if (i == length - 1)
-			dist[i] = sqrt(pow(y[0] - y[i], 2));
-		else
-			dist[i] = sqrt(pow(y[i + 1] - y[i], 2));
-	}
+	for (int i = 1; i < length; i++)
+		dist[i] = abs(y[i] - y[i-1]);
+	dist[0] = dist.back();
 	return dist;
 }
 
@@ -180,7 +176,7 @@ vector<int> iterate(MyImage<double> &I, MyImage<double> &Ibg,vector<int>&y, doub
 			else
 				minE = minE;
 			minEj = 0;
-			for (int j = -5; j < 6; j++)
+			for (int j = -5; j < 21; j++)
 			{
 				vector<int> y_new = y;
 				y_new[i] += j;

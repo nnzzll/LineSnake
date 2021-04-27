@@ -10,17 +10,15 @@ from utils import *
 lib = ctypes.cdll.LoadLibrary('Lib/snake.dll')
 
 
-def LineSnake(polar_img: np.ndarray, gaussian_img: np.ndarray, y: np.ndarray, alpha: float = 0, beta: float = 0.7, gamma: float = 1.8, sigma: float = 0.05, dist: float = 0.3):
+def LineSnake(polar_img: np.ndarray, y: np.ndarray, alpha: float = 0, beta: float = 0.7, gamma: float = 1.8, sigma: float = 0.05, dist: float = 0.3):
     rows, cols = polar_img.shape
     polar_img_ptr = ctypes.cast(
         polar_img.ctypes.data, ctypes.POINTER(ctypes.c_double))
-    gauss_ptr = ctypes.cast(gaussian_img.ctypes.data,
-                            ctypes.POINTER(ctypes.c_double))
     y_ptr = ctypes.cast(y.ctypes.data, ctypes.POINTER(ctypes.c_double))
     output_y = np.zeros(len(y)).astype(float)
     output_y_ptr = ctypes.cast(
         output_y.ctypes.data, ctypes.POINTER(ctypes.c_double))
-    lib.active_contour(polar_img_ptr, gauss_ptr, y_ptr, output_y_ptr, ctypes.c_int(rows), ctypes.c_int(
+    lib.active_contour(polar_img_ptr, y_ptr, output_y_ptr,ctypes.c_int(len(y)), ctypes.c_int(rows), ctypes.c_int(
         cols), ctypes.c_double(alpha), ctypes.c_double(beta), ctypes.c_double(gamma), ctypes.c_double(sigma))
     return output_y.copy()
 
@@ -36,7 +34,7 @@ def main():
     # fig = plt.figure()
     begin = time.time()
 
-    for i in range(147, len(data)):
+    for i in range( len(data)):
         image = data[i].astype(float)
         polar_img = img2polar(image, (128, 360), (255, 255), 255)
         polar_img[:21,:]=0
@@ -44,10 +42,10 @@ def main():
         for _ in range(2):
             I = median_filter(I, 3)
         gauss = gaussian_filter(I, 1)
-        y = 35*np.ones([36], float)
-        x = np.array([10*i for i in range(36)])
+        y = 35*np.ones([12], float)
+        x = np.array([30*i for i in range(12)])
 
-        y_new_lumen = LineSnake(I, gauss, y.copy(), 0, 0.2, 1.8, 0, 0.4)
+        y_new_lumen = LineSnake(I, y.copy(), 0, 0.2, 1.8, 0, 0.4)
         fig, ax = plt.subplots(1, 2)
         ax[1].imshow(I, 'gray')
         ax[1].plot(x, y_new_lumen, 'o', c='r', label='lumen')

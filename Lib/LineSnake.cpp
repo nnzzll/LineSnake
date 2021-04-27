@@ -73,7 +73,7 @@ vector<double> calculate_Eint2(vector<int> &y)
 	return Eint2;
 }
 
-vector<double> calculate_Eimg(MyImage<double> &I, MyImage<double> &Ibg, vector<int> &x, vector<int> &y)
+vector<double> calculate_Eimg(MyImage<double> &I, vector<int> &x, vector<int> &y)
 {
 	int length = y.size();
 
@@ -85,12 +85,8 @@ vector<double> calculate_Eimg(MyImage<double> &I, MyImage<double> &Ibg, vector<i
 
 	vector<double> C(length);
 	for (int i = 0; i < length; i++)
-		C[i] = G[i] / (Ibg.getPixel(y[i], x[i]) + 1e-8);
+		C[i] = G[i] / (I.getPixel(y[i], x[i]) + 1e-8);
 
-	// double _minC = *min_element(C.begin(), C.end());
-	// double _maxC = *max_element(C.begin(), C.end());
-	// for (int i = 0; i < length; i++)
-	// 	Eimg[i] = (_minC - C[i]) / (_maxC - _minC);
 	return C;
 }
 
@@ -100,7 +96,7 @@ vector<double> calculate_dist(vector<int> &y)
 	vector<double> dist(length);
 	for (int i = 1; i < length; i++)
 		dist[i] = abs(y[i] - y[i-1]);
-	dist[0] = dist.back();
+	dist[0] = abs(y.back()-y[0]);
 	return dist;
 }
 
@@ -136,11 +132,11 @@ vector<double> calculate_Econ(vector<int> &y)
 	return Econ;
 }
 
-double calculate_E(MyImage<double> &I, MyImage<double> &Ibg, vector<int> &x, vector<int> &y, double alpha, double beta, double gamma, double sigma, double dist)
+double calculate_E(MyImage<double> &I, vector<int> &x, vector<int> &y, double alpha, double beta, double gamma, double sigma, double dist)
 {
 	vector<double> Eint1 = calculate_Eint1(y);
 	vector<double> Eint2 = calculate_Eint2(y);
-	vector<double> Eimg = calculate_Eimg(I, Ibg, x, y);
+	vector<double> Eimg = calculate_Eimg(I, x, y);
 	vector<double> Econ = calculate_Econ(y);
 	vector<double> E_dist = calculate_dist(y);
 	double E = 0;
@@ -150,13 +146,14 @@ double calculate_E(MyImage<double> &I, MyImage<double> &Ibg, vector<int> &x, vec
 	return E / length;
 }
 
-vector<int> iterate(MyImage<double> &I, MyImage<double> &Ibg,vector<int>&y, double alpha, double beta, double gamma, double sigma, double dist)
+vector<int> iterate(MyImage<double> &I,vector<int>&y, double alpha, double beta, double gamma, double sigma, double dist)
 {
-	vector<int> x(36);
-	for (int i = 0; i < 36; i++)
-		x[i] = i * 10;
-	int length = x.size();
-	double init_E = calculate_E(I, Ibg, x, y, alpha, beta, gamma, sigma, dist);
+	int length = y.size();
+	vector<int> x(length);
+	for (int i = 0; i < length; i++)
+		x[i] = (360/length)*i;
+	
+	double init_E = calculate_E(I, x, y, alpha, beta, gamma, sigma, dist);
 	double E_old, E_new;
 	double minE = 0;
 	double tempE;
@@ -180,7 +177,7 @@ vector<int> iterate(MyImage<double> &I, MyImage<double> &Ibg,vector<int>&y, doub
 			{
 				vector<int> y_new = y;
 				y_new[i] += j;
-				tempE = calculate_E(I, Ibg, x, y_new, alpha, beta, gamma, sigma, dist);
+				tempE = calculate_E(I, x, y_new, alpha, beta, gamma, sigma, dist);
 				if (tempE < minE)
 				{
 					minE = tempE;
@@ -196,19 +193,17 @@ vector<int> iterate(MyImage<double> &I, MyImage<double> &Ibg,vector<int>&y, doub
 	return y;
 }
 
-extern "C" __declspec(dllexport) void active_contour(double *polar_img, double *gaussian_img, double *input_y, double *output_y, int rows, int cols, double alpha, double beta, double gamma, double sigma,double dist)
+extern "C" __declspec(dllexport) void active_contour(double *polar_img, double *input_y, double *output_y,int length, int rows, int cols, double alpha, double beta, double gamma, double sigma,double dist)
 {
+
 	MyImage<double> I(rows, cols);
 	I.data = polar_img;
-	MyImage<double> Ibg(rows, cols);
-	Ibg.data = gaussian_img;
-	vector<int> y_ori(36);
-	for(int i=0;i<36;i++)
+	vector<int> y_ori(length);
+	for(int i=0;i<length;i++)
 		y_ori[i] = input_y[i];
-	vector<int> y = iterate(I, Ibg,y_ori, alpha, beta, gamma, sigma,dist);
+	vector<int> y = iterate(I,y_ori, alpha, beta, gamma, sigma,dist);
 
-	for (int i = 0; i < 36; i++)
+	for (int i = 0; i < length; i++)
 		output_y[i] = y[i];
 	I.data = nullptr;
-	Ibg.data = nullptr;
 }
